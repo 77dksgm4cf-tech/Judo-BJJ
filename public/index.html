@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Judo Fortschritt</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#4da3ff" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Judo" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="stylesheet" href="styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="appTitle">🥋 Judo &amp; BJJ</h1>
+    <div id="disziplinSwitch" class="categorySwitch">
+      <button type="button" class="seg" data-disziplin="all">Alle</button>
+      <button type="button" class="seg" data-disziplin="Judo">Judo</button>
+      <button type="button" class="seg" data-disziplin="BJJ">BJJ</button>
+    </div>
+  </header>
+
+  <details id="filterBox" class="filterBox">
+    <summary>Filter</summary>
+    <div class="toolbar">
+      <select id="activeFilter">
+        <option value="active">Nur aktive</option>
+        <option value="inactive">Nur inaktive</option>
+        <option value="ausgetreten">Ausgetreten</option>
+        <option value="all">Alle</option>
+      </select>
+      <label class="activeToggle"><input type="checkbox" id="filterWettkaempfer" /> Nur Wettkämpfer</label>
+    </div>
+  </details>
+
+  <div id="status" class="status"></div>
+
+  <main id="viewMembers" class="view">
+    <input type="search" id="memberSearch" placeholder="Mitglied suchen (Vor- oder Nachname)…" />
+    <div id="memberList" class="pillList"></div>
+    <button id="btnAddMember" class="fileLabel" style="margin-bottom:12px;width:100%;">➕ Neues Mitglied anlegen</button>
+    <div id="memberDetail" class="childDetail hidden">
+      <span id="memberAge" class="childAge"></span>
+      <select id="memberDisziplin" aria-label="Disziplin">
+        <option value="Judo">Judo</option>
+        <option value="BJJ">BJJ</option>
+      </select>
+      <select id="memberGuertel"></select>
+      <label class="activeToggle"><input type="checkbox" id="memberActive" /> Aktiv</label>
+      <label class="activeToggle"><input type="checkbox" id="memberWettkaempfer" /> Wettkämpfer</label>
+      <label class="activeToggle"><input type="checkbox" id="memberProbetraining" /> Probetraining</label>
+    </div>
+    <div id="memberGekuendigt" class="gekuendigtInfo hidden"></div>
+    <div id="memberNextInfo" class="childNextInfo hidden"></div>
+    <div id="memberTechniques" class="techniqueList"></div>
+  </main>
+
+  <main id="viewGraduation" class="view hidden">
+    <label class="fieldLabel" for="graduationBelt">Ziel-Graduierung (Anzahl Mitglieder)</label>
+    <select id="graduationBelt"></select>
+    <div id="graduationList"></div>
+  </main>
+
+  <main id="viewOverview" class="view hidden">
+    <label class="filterToggle">
+      <input type="checkbox" id="filterMissing" />
+      Nur fehlende Prüfungsinhalte anzeigen
+    </label>
+    <div id="overviewMatrix" class="matrixWrap"></div>
+  </main>
+
+  <main id="viewPlan" class="view hidden">
+    <p class="childNextInfo">Eigener Vorschlag, abgeleitet aus den DJB-Prüfungsinhalten – keine offizielle DJB-Vorgabe. Der 8. Kyu umfasst nur wenige Einheiten.</p>
+    <div class="planControls">
+      <select id="planGuertel"></select>
+    </div>
+    <div id="planTable" class="matrixWrap"></div>
+  </main>
+
+  <main id="viewAttendance" class="view hidden">
+    <input type="search" id="attendanceSearch" placeholder="Mitglied suchen (Vor- oder Nachname)…" />
+    <div class="planControls">
+      <input type="date" id="attendanceDate" />
+      <button id="btnCreateSession">➕ Training anlegen</button>
+      <select id="attendanceSessionSelect"></select>
+      <button id="btnDeleteSession">🗑️ Termin löschen</button>
+    </div>
+    <div id="attendanceNextInfo" class="childNextInfo hidden"></div>
+    <div id="attendanceQuickActions" class="planControls hidden">
+      <button id="btnMarkAllPresent">Alle anwesend</button>
+      <button id="btnMarkAllAbsent">Alle abwesend</button>
+    </div>
+    <div id="attendanceList" class="memberList"></div>
+
+    <h3>Trainingsübersicht (pro Monat)</h3>
+    <div id="attendanceSummary" class="matrixWrap"></div>
+  </main>
+
+  <main id="viewMore" class="view hidden">
+    <div class="moreList">
+      <button type="button" id="btnViewOverview" class="moreItem">📊 Übersicht<span>Matrix aller Prüfungsinhalte pro Mitglied</span></button>
+      <button type="button" id="btnViewPlan" class="moreItem">📅 Trainingsplan<span>Wochenplan je Kyu-Grad (Vorschlag)</span></button>
+      <button type="button" id="btnViewBackup" class="moreItem">💾 Daten / Archiv<span>Sichern, Wiederherstellen, Excel</span></button>
+    </div>
+    <p class="childNextInfo">Prüfungsinhalte nach den DJB-Anforderungen für Kyu-Grade (Stand 1. Februar 2024). Mindestalter, Vorbereitungszeiten und Dan-Grade sind nicht enthalten.</p>
+  </main>
+
+  <main id="viewBackup" class="view hidden">
+    <p>
+      Diese App speichert alle Daten (Mitglieder, Prüfungsfortschritt, Anwesenheit)
+      <strong>nur im Browser-Speicher (localStorage) dieses Geräts</strong> — es gibt
+      keinen Server, der die Daten sichert. Wenn du den Browser-Speicher löschst,
+      einen anderen Browser/Gerät benutzt oder bei iOS die Seite lange nicht öffnest,
+      sind die Daten weg. Exportiere daher regelmäßig ein Archiv!
+    </p>
+    <div class="planControls">
+      <button id="btnExportBackup">⬇️ Daten exportieren (JSON-Archiv)</button>
+      <label class="fileLabel">
+        ⬆️ Daten importieren (JSON-Archiv)
+        <input type="file" id="importBackupFile" accept=".json" hidden />
+      </label>
+    </div>
+    <div class="planControls">
+      <button id="btnClearAll">🗑️ Alle lokalen Daten löschen</button>
+    </div>
+    <p id="backupInfo" class="childNextInfo"></p>
+
+    <h3>Mitgliederliste (Excel)</h3>
+    <p>
+      Export/Import der Mitgliederliste als Excel-Datei (Nr., Vorname, Nachname,
+      Geburtsdatum, Alter, Austrittsdatum, Status, Disziplin, Gürtel, Wettkämpfer)
+      — z.B. zum Abgleich mit der Vereinssoftware. Disziplin: „Judo“ oder „BJJ“
+      (leer = Judo). Beim Import werden die Spalten anhand der Überschrift erkannt.
+    </p>
+    <div class="planControls">
+      <button id="btnExportMembers">⬇️ Mitgliederliste exportieren</button>
+      <label class="fileLabel">
+        ⬆️ Mitgliederliste importieren
+        <input type="file" id="importMembersFile" accept=".xlsx" hidden />
+      </label>
+    </div>
+  </main>
+
+  <nav class="bottomNav">
+    <button type="button" id="btnViewMembers" class="tab active"><span class="navIcon">👥</span>Mitglieder</button>
+    <button type="button" id="btnViewAttendance" class="tab"><span class="navIcon">✅</span>Anwesenheit</button>
+    <button type="button" id="btnViewGraduation" class="tab"><span class="navIcon">🥋</span>Graduierung</button>
+    <button type="button" id="btnViewMore" class="tab"><span class="navIcon">⋯</span>Mehr</button>
+  </nav>
+
+  <script src="data/techniques.js"></script>
+  <script src="data/trainingsplan.js"></script>
+  <script src="store.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

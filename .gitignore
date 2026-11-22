@@ -1,0 +1,8 @@
+node_modules/
+*.xlsx
+*.xls
+*.json.bak
+.DS_Store
+Thumbs.db
+# DJB-Material (urheberrechtlich geschützt) nicht veröffentlichen
+Prüfungsordnung/

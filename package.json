@@ -1,0 +1,9 @@
+{
+  "name": "judo-tracker-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Judo Fortschritts-Tracker (DJB Kyu-Prüfungen) als reine Client-App (GitHub Pages, localStorage)",
+  "scripts": {
+    "generate-static-data": "node scripts/generate-static-data.js"
+  }
+}
